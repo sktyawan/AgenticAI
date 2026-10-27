@@ -1,0 +1,28 @@
+# Secrets & credentials — never commit these
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
+credentials*.json
+secrets*.json
+
+# Dependencies & build
+node_modules/
+dist/
+build/
+target/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS & editors
+.DS_Store
+.idea/
+.vscode/
+
+# Logs & coverage
+*.log
+coverage/
