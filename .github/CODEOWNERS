@@ -1,0 +1,16 @@
+# CODEOWNERS — AgenticAI
+#
+# Pemilik default: @sktyawan (super admin).
+# Direktori sensitif di bawah ini wajib 2 reviewer — jumlah reviewer itu
+# ditegakkan oleh ruleset cabang main (lihat docs/STRUCTURE.md §9),
+# bukan oleh file ini saja. File ini hanya meminta review dari pemilik.
+#
+# Catatan: baris di bawah memakai handle pemilik repo. Ganti handle ini
+# bila kepemilikan direktori berpindah ke tim/organisasi.
+
+* @sktyawan
+/services/audit-signer/ @sktyawan
+/services/vault/ @sktyawan
+/services/identity/ @sktyawan
+/packages/policy/ @sktyawan
+/.github/workflows/ @sktyawan

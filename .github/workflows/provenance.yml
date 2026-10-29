@@ -1,0 +1,41 @@
+# Verify release provenance — AgenticAI (Fase 0)
+#
+# Gerbang promosi: sebelum sebuah rilis dipromosikan ke produksi,
+# workflow ini (dijalankan manual per tag) mengunduh SBOM dari aset
+# rilis dan memverifikasi pengesahan provenance-nya. Verifikasi gagal
+# = rilis tidak dipromosikan. Lihat docs/STRUCTURE.md §9.
+
+name: Verify release provenance
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag rilis yang diverifikasi (mis. v0.1.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify SBOM attestation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Download SBOM from release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          mkdir -p /tmp/prov-check
+          gh release download "${{ inputs.tag }}" -p "sbom*" --dir /tmp/prov-check
+          ls /tmp/prov-check
+      - name: Verify attestation
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          gh attestation verify /tmp/prov-check/sbom.spdx.json --repo "${{ github.repository }}"

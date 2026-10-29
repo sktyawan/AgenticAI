@@ -1,0 +1,15 @@
+# Dependabot — AgenticAI
+#
+# Hanya ekosistem github-actions yang aktif saat ini, karena repo belum
+# punya manifes paket (stack diputuskan di ADR-006). Ekosistem lain
+# (npm/pip/dll) ditambahkan saat manifesnya mendarat.
+#
+# PR Dependabot untuk direktori sensitif ditinjau seperti PR biasa,
+# tanpa auto-merge (lihat docs/STRUCTURE.md §9).
+
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"

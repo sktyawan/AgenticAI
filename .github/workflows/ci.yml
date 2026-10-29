@@ -1,0 +1,72 @@
+# CI — AgenticAI (Fase 0)
+#
+# Gerbang per PR: pemindaian secret, review dependensi, dan pemeriksaan
+# higiene repo. Uji unit/kontrak/e2e ditambahkan saat kode pertama
+# mendarat (Fase 1+); workflow ini sengaja tidak berpura-pura menjalankan
+# uji yang belum ada.
+#
+# Semua action di-pin ke SHA commit (bukan tag bergerak), sesuai
+# docs/STRUCTURE.md §9. Komentar "# vX" di tiap baris menyatakan tag
+# asal SHA tersebut agar mudah ditinjau.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Gitleaks scan
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Dependency review
+        uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
+        with:
+          fail-on-severity: high
+
+  hygiene:
+    name: Repo hygiene
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Required files exist
+        run: |
+          set -e
+          for f in README.md SECURITY.md CONTRIBUTING.md .github/CODEOWNERS docs/STRUCTURE.md docs/CRUD.md; do
+            test -f "$f" || { echo "HILANG: $f"; exit 1; }
+          done
+          echo "Semua file wajib ada."

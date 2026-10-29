@@ -1,0 +1,55 @@
+# Release SBOM + provenance — AgenticAI (Fase 0)
+#
+# Berjalan tiap tag v* didorong. Menghasilkan SBOM (SPDX JSON) untuk isi
+# repo pada tag tersebut, mengesahkan provenance build-nya, dan
+# melampirkannya sebagai aset rilis GitHub. Tidak ada rilis dari mesin
+# pengembang — hanya dari workflow ini (lihat docs/STRUCTURE.md §9).
+#
+# Workflow ini mengesahkan SBOM, bukan artefak aplikasi: artefak aplikasi
+# (bila ada) ditambahkan ke job ini saat Fase 1+, dan provenance.yml
+# memverifikasi pengesahan sebelum promosi ke produksi.
+
+name: Release SBOM + provenance
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  sbom:
+    name: SBOM + attestation + release asset
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          ref: ${{ github.ref }}
+      - name: Generate SBOM (SPDX JSON)
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0
+        with:
+          format: spdx-json
+          output-file: sbom.spdx.json
+      - name: Attest SBOM provenance
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
+        with:
+          subject-path: sbom.spdx.json
+      - name: Upload SBOM to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          gh release view "${{ github.ref_name }}" >/dev/null 2>&1 \
+            || gh release create "${{ github.ref_name }}" \
+              --title "${{ github.ref_name }}" \
+              --notes "SBOM + provenance (lihat attestation)."
+          gh release upload "${{ github.ref_name }}" sbom.spdx.json --clobber

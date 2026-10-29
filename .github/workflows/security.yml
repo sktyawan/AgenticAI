@@ -1,0 +1,37 @@
+# Security scan — AgenticAI (Fase 0)
+#
+# Trivy filesystem scan: kerentanan, misconfig, dan secret.
+# Temuan HIGH/CRITICAL menggagalkan job (exit-code 1).
+# Dijalankan tiap PR, tiap push ke main, dan mingguan (Senin 03:00 UTC).
+
+name: Security scan
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 3 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  trivy:
+    name: Trivy filesystem scan
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Trivy scan (vuln, misconfig, secret)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          format: table
